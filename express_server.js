@@ -3,6 +3,20 @@ const app = express();
 const bodyParser = require('body-parser');
 const PORT = 8080;
 
+const generateRandomString = function() {
+  const permittedChars = 'abcdefghijklmnopqrstuvwxyz0123456789'
+  let string = '';
+  for (let i = 0; i <= 6; i++) {
+    // let characterCode = Math.floor(Math.random()*26) + 65;
+    // let char = String.fromCharCode(characterCode);
+    // string += char;
+    let char = Math.floor(Math.random()*36);
+    string += permittedChars[char];
+  }
+  return string;
+}
+// console.log('randomstring', generateRandomString());
+
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({extended: true}));
 
@@ -18,6 +32,11 @@ app.get('/', (req, res) => {
 app.get('/urls/new', (req, res) => {
   res.render('urls_new');
 });
+
+app.post('/urls', (req, res) => {
+  console.log(req.body);
+  res.send('OK');
+})
 
 app.get('/urls', (req, res) => {
   const templateVars = { urls: urlDatabase };
