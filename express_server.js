@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const PORT = 8080;
 
 const generateRandomString = function() {
@@ -27,6 +28,11 @@ const urlDatabase = {
 
 app.get('/', (req, res) => {
   res.send('Hello!');
+});
+
+app.post('/login', (req,res) => {
+  res.cookie('username',req.body.username);
+  res.redirect('/urls');
 });
 
 app.get('/urls/new', (req, res) => {
