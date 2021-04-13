@@ -22,6 +22,7 @@
             <th scope="col">Short URL</th>
             <th scope="col">Long URL</th>
             <th scope="col">Delete</th>
+            <th scope="col">Edit</th>
           </tr>
         </thead>
         <tbody>
@@ -34,8 +35,13 @@
                 <%= urls[url] %>
               </td>
               <td>
-                <form class="form-inline" method="POST" action="/urls/<%= url %>/delete">
-                  <button type="submit" class="btn">Delete</button>
+                <form method="POST" action="/urls/<%= url %>/delete">
+                  <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+              </td>
+              <td>
+                <button type="submit" class="btn btn-link"><a href="/urls/<%= url %>">Edit</a></button>
+                <!-- am I supposed to be posting with edit? I don't need to change anything yet -->
                 </form>
               </td>
             </tr>

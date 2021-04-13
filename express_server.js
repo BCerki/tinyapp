@@ -42,7 +42,7 @@ app.get('/urls', (req, res) => {
 app.post('/urls', (req, res) => {
   const generatedShort = generateRandomString()
   urlDatabase[generatedShort] = req.body.longURL;
-  console.log(urlDatabase);
+  // console.log(urlDatabase);
   res.redirect(`/urls/${generatedShort}`);
 })
 
@@ -59,8 +59,18 @@ app.get('/urls/:shortURL', (req,res) => {
   res.render('urls_show', templateVars);
   
 })
+
+app.post('/urls/:id', (req,res) => {
+  const originalShort = req.params.id;
+  // console.log('req.params',req.params);
+  
+  urlDatabase[originalShort] = req.body.newLongURL;
+  // console.log('new url from form',urlDatabase);
+  res.redirect('/urls/' + originalShort);
+});
+
 app.post('/urls/:shortURL/delete', (req,res) => {
-  const urlToDelete = req.params.shortURL
+  const urlToDelete = req.params.shortURL;
   delete urlDatabase[urlToDelete];
   res.redirect('/urls');
 });
