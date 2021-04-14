@@ -137,6 +137,12 @@ app.post('/register', (req, res) => {
 });
 
 app.get('/urls/new', (req, res) => {
+  const retrievedUserID = retrieveUserID(req.body.email, users);
+
+  if (!retrievedUserID) {
+    res.redirect('/login');
+    return;
+  }
   const templateVars = {
     user: users[req.cookies['user_id']]
   }
