@@ -18,14 +18,23 @@ const generateRandomString = function () {
 }
 // console.log('randomstring', generateRandomString());
 
-const checkIfEmailAlreadyHasAccount = function(candidateUser,users) {
+const checkIfEmailAlreadyHasAccount = function(enteredEmail,users) {
   for (const key in users) {
-   if (candidateUser === users[key].email){
+   if (enteredEmail === users[key].email){
      return true;
    }
   }
 return false;
 };
+
+const checkPassword = function(enteredEmail,enteredPassword,users) {
+  for (const key in users) {
+    if (enteredEmail === users[key].email && enteredPassword === users[key].password){
+      return true;
+    }
+   }
+ return false;
+ };
 
 
 app.set('view engine', 'ejs');
@@ -49,10 +58,16 @@ const users = {
     password: "dishwasher-funk"
   }
 }
-console.log('function for checking',checkIfEmailAlreadyHasAccount('user@example.com',users))
+
+console.log('checking password, should return true:',checkPassword("user@example.com","purple-monkey-dinosaur",users))
 
 app.get('/', (req, res) => {
   res.send('Hello!');
+});
+
+app.get('/login', (req,res)=>{
+res.render('login');
+
 });
 
 app.post('/login', (req, res) => {
@@ -62,9 +77,9 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-  res.clearCookie('user_id');
+  // res.clearCookie('user_id');
   res.redirect('/urls');
-  //STOPSTOP--problem is here somewhere--logout fails if statement in partial
+  //problem is here somewhere--logout fails if statement in partial
 });
 
 app.get('/register', (req, res) => {
