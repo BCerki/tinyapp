@@ -11,12 +11,9 @@
         <a class="nav-item nav-link" href="/urls/new">Create New URL</a>
       </div>
     </div>
-
       <% if(!user || !user.email) { %>
-        <form method="POST" action="/login">
-          <input type="text" placeholder="username" name="username">
-          <button type="submit">Login</button>
-        </form>
+          <button type="submit"><a href='/login'>Login</a></button>
+          <button type="submit"><a href='/register'>Register</a></button>
         <% } else { %>
           <!-- how to get rid of this else -->
             Logged in as: <%= user.email %>
