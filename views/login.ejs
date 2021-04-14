@@ -11,13 +11,19 @@
 </head>
 
 <body>
-  <form method="POST" action="/login">
-    <label for="email">Email:</label>
-    <input type="email" name="email" placeholder="email">
-    <label for="password">Password:</label>
-    <input type="password" name="password" placeholder="password">
-    <button type="submit">Login</button>
 
+  <%- include('partials/_header') %>
+  <main style="margin: 1em;">
+  <h3>Login</h3>
+  <form method="POST" action="/login">
+    <div class="form-group mb-2">
+      <label for="email">Email address:</label>
+      <input class="form-control" style="width: 300px; margin: 1em" type="email" name="email" placeholder="Enter email">
+      <label for="password">Password:</label>
+      <input class="form-control" style="width: 300px; margin: 1em" type="password" name="password" placeholder="password">
+      <button class="btn btn-primary" type="submit">Login</button>
+    </div>
+  </main>
 </body>
 
 </html>

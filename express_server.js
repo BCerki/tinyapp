@@ -69,7 +69,10 @@ app.get('/', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
-  res.render('login');
+  const templateVars = {
+    user: users[req.cookies['user_id']]
+  }
+  res.render('login',templateVars);
 
 });
 
