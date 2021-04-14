@@ -126,7 +126,7 @@ app.post('/register', (req, res) => {
     users[userID].id = userID;
     users[userID].email = req.body.email;
     users[userID].password = req.body.password;
-    console.log('users object:', users); //to test with cURL: curl -X POST -i localhost:8080/register -d "username=vanillaice&&password=ladeda"
+    console.log('users object:', users);
     res.cookie('user_id', userID);
     res.redirect('/urls');
   console.log('users object', users)
