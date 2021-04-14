@@ -85,9 +85,11 @@ app.post('/login', (req, res) => {
   //if the email or password are wrong
   if (users[retrievedUserID].email !== req.body.email) {
     res.redirect(403, '/register');
+    return;
   }
   if (users[retrievedUserID].password !== req.body.password) {
     res.redirect(403, '/register');
+    return; //could probs combine this with above
   }
   console.log('retriveduserid', retrievedUserID);
   res.cookie('user_id', retrievedUserID);
@@ -95,9 +97,8 @@ app.post('/login', (req, res) => {
 });
 
 app.post('/logout', (req, res) => {
-  // res.clearCookie('user_id');
+  res.clearCookie('user_id');
   res.redirect('/urls');
-  //problem is here somewhere--logout fails if statement in partial
 });
 
 app.get('/register', (req, res) => {
