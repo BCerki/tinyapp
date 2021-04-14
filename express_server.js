@@ -46,7 +46,7 @@ app.get('/', (req, res) => {
 
 app.post('/login', (req,res) => {
   res.cookie('username',req.body.username);
-  console.log('rescookie',res.cookie);
+  // console.log('rescookie',res.cookie);
   res.redirect('/urls');
 });
 
@@ -60,6 +60,17 @@ app.get('/register', (req, res)=> {
   res.render('registration',templateVars)
 });
 
+app.post('/register', (req, res) => {
+  const userID = generateRandomString();
+  users[userID] = {};
+  users[userID].id = userID;
+  users[userID].email = req.body.email;
+  users[userID].password = req.body.password;
+  console.log('users object:',users); //to test with cURL: curl -X POST -i localhost:8080/register -d "username=vanillaice&&password=ladeda"
+  res.cookie('user_id',userID);
+  res.redirect('/urls');
+});
+
 app.get('/urls/new', (req, res) => {
   const templateVars = { username: req.cookies["username"]}
   // console.log(req);
@@ -68,7 +79,7 @@ app.get('/urls/new', (req, res) => {
 
 
 app.get('/urls', (req, res) => {
-  console.log('request',req.cookies);
+  // console.log('request',req.cookies);
   const templateVars = { 
     username: req.cookies["username"],
     urls: urlDatabase };
