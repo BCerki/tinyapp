@@ -18,23 +18,33 @@ const generateRandomString = function () {
 }
 // console.log('randomstring', generateRandomString());
 
-const checkIfEmailAlreadyHasAccount = function(enteredEmail,users) {
+const checkIfEmailAlreadyHasAccount = function (enteredEmail, users) {
   for (const key in users) {
-   if (enteredEmail === users[key].email){
-     return true;
-   }
-  }
-return false;
-};
-
-const checkPassword = function(enteredEmail,enteredPassword,users) {
-  for (const key in users) {
-    if (enteredEmail === users[key].email && enteredPassword === users[key].password){
+    if (enteredEmail === users[key].email) {
       return true;
     }
-   }
- return false;
- };
+  }
+  return false;
+};
+
+// const checkPassword = function (enteredEmail, enteredPassword, users) {
+//   for (const key in users) {
+//     if (enteredEmail === users[key].email && enteredPassword === users[key].password) {
+//       return true;
+//     }
+//   }
+//   return false;
+// };
+
+const lookUpUserID = function (enteredEmail, users) {
+  for (const key in users) {
+    if (enteredEmail === users[key].email) {
+      return key;
+    }
+  }
+  return null; //is this the best? many errors in the terminal
+}
+
 
 
 app.set('view engine', 'ejs');
@@ -47,7 +57,7 @@ const urlDatabase = {
 };
 
 const users = {
-  "userRandomID": {
+  "12345": {
     id: "userRandomID",
     email: "user@example.com",
     password: "purple-monkey-dinosaur"
@@ -59,20 +69,30 @@ const users = {
   }
 }
 
-console.log('checking password, should return true:',checkPassword("user@example.com","purple-monkey-dinosaur",users))
+// console.log('checking password, should return true:',checkPassword("user@example.com","purple-monkey-dinosaur",users))
+
+console.log('lookup check, shoudl be userRandomID',lookUpUserID('user@example.com',users));
 
 app.get('/', (req, res) => {
   res.send('Hello!');
 });
 
-app.get('/login', (req,res)=>{
-res.render('login');
+app.get('/login', (req, res) => {
+  res.render('login');
 
 });
 
 app.post('/login', (req, res) => {
-  // res.cookie('username',req.body.username);
-  // console.log('rescookie',res.cookie);
+  const retrievedUserID = lookUpUserID(req.body.email, users);
+  
+  if (!checkIfEmailAlreadyHasAccount(req.body.email, users)) {
+    res.redirect(403, '/register');
+  }
+  if (users[retrievedUserID].password !== req.body.password) {
+    res.redirect(403, '/register');
+  }
+  console.log('retriveduserid',retrievedUserID);
+  res.cookie('user_id', retrievedUserID);
   res.redirect('/urls');
 });
 
@@ -92,10 +112,10 @@ app.get('/register', (req, res) => {
 
 app.post('/register', (req, res) => {
   if (!req.body.email || !req.body.password) {
-    res.redirect(400,'/register'); //do something more specific than this? Compass unclear
-  } else if (checkIfEmailAlreadyHasAccount(req.body.email,users)) {
-    res.redirect(400,'/register');
-  }  else {
+    res.redirect(400, '/register'); //do something more specific than this? Compass unclear
+  } else if (checkIfEmailAlreadyHasAccount(req.body.email, users)) {
+    res.redirect(400, '/register');
+  } else {
     const userID = generateRandomString();
     users[userID] = {};
     users[userID].id = userID;
@@ -105,7 +125,7 @@ app.post('/register', (req, res) => {
     res.cookie('user_id', userID);
     res.redirect('/urls');
   }
-  console.log('users object',users)
+  console.log('users object', users)
 
 });
 
