@@ -27,16 +27,7 @@ const checkIfEmailAlreadyHasAccount = function (enteredEmail, users) {
   return false;
 };
 
-// const checkPassword = function (enteredEmail, enteredPassword, users) {
-//   for (const key in users) {
-//     if (enteredEmail === users[key].email && enteredPassword === users[key].password) {
-//       return true;
-//     }
-//   }
-//   return false;
-// };
-
-const lookUpUserID = function (enteredEmail, users) {
+const retrieveUserID = function (enteredEmail, users) {
   for (const key in users) {
     if (enteredEmail === users[key].email) {
       return key;
@@ -71,7 +62,7 @@ const users = {
 
 // console.log('checking password, should return true:',checkPassword("user@example.com","purple-monkey-dinosaur",users))
 
-console.log('lookup check, shoudl be userRandomID',lookUpUserID('user@example.com',users));
+console.log('lookup check, shoudl be userRandomID', retrieveUserID('user@example.com', users));
 
 app.get('/', (req, res) => {
   res.send('Hello!');
@@ -83,15 +74,22 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  const retrievedUserID = lookUpUserID(req.body.email, users);
-  
-  if (!checkIfEmailAlreadyHasAccount(req.body.email, users)) {
+  //if the email doesn't exist in the users object
+  const retrievedUserID = retrieveUserID(req.body.email, users);
+
+  if (!retrievedUserID) {
+    res.redirect(403, '/register');
+    return;
+  }
+
+  //if the email or password are wrong
+  if (users[retrievedUserID].email !== req.body.email) {
     res.redirect(403, '/register');
   }
   if (users[retrievedUserID].password !== req.body.password) {
     res.redirect(403, '/register');
   }
-  console.log('retriveduserid',retrievedUserID);
+  console.log('retriveduserid', retrievedUserID);
   res.cookie('user_id', retrievedUserID);
   res.redirect('/urls');
 });
@@ -111,11 +109,17 @@ app.get('/register', (req, res) => {
 });
 
 app.post('/register', (req, res) => {
+
+  const retrievedUserID = retrieveUserID(req.body.email, users);
+
   if (!req.body.email || !req.body.password) {
     res.redirect(400, '/register'); //do something more specific than this? Compass unclear
-  } else if (checkIfEmailAlreadyHasAccount(req.body.email, users)) {
+    return;
+  }
+  if (retrievedUserID) {
     res.redirect(400, '/register');
-  } else {
+    return;
+  }
     const userID = generateRandomString();
     users[userID] = {};
     users[userID].id = userID;
@@ -124,7 +128,6 @@ app.post('/register', (req, res) => {
     console.log('users object:', users); //to test with cURL: curl -X POST -i localhost:8080/register -d "username=vanillaice&&password=ladeda"
     res.cookie('user_id', userID);
     res.redirect('/urls');
-  }
   console.log('users object', users)
 
 });
