@@ -51,7 +51,7 @@ const users = {
   "12345": {
     id: "userRandomID",
     email: "user@example.com",
-    password: "purple-monkey-dinosaur"
+    password: "j"
   },
   "user2RandomID": {
     id: "user2RandomID",
@@ -62,7 +62,7 @@ const users = {
 
 // console.log('checking password, should return true:',checkPassword("user@example.com","purple-monkey-dinosaur",users))
 
-console.log('lookup check, shoudl be userRandomID', retrieveUserID('user@example.com', users));
+// console.log('lookup check, shoudl be userRandomID', retrieveUserID('user@example.com', users));
 
 app.get('/', (req, res) => {
   res.send('Hello!');
@@ -137,9 +137,8 @@ app.post('/register', (req, res) => {
 });
 
 app.get('/urls/new', (req, res) => {
-  const retrievedUserID = retrieveUserID(req.body.email, users);
-
-  if (!retrievedUserID) {
+  // console.log('req.cookies',Object.keys(req.cookies))
+  if (Object.keys(req.cookies).length === 0) {
     res.redirect('/login');
     return;
   }
@@ -164,6 +163,7 @@ app.get('/urls', (req, res) => {
 app.post('/urls', (req, res) => {
   const generatedShort = generateRandomString()
   urlDatabase[generatedShort] = req.body.longURL;
+  console.log('post urls req.cookies',req.cookies);
   // console.log(urlDatabase);
   res.redirect(`/urls/${generatedShort}`);
 })
