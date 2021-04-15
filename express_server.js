@@ -40,8 +40,7 @@ const urlsForUser = function(id) {
   const usersURLs = {};
   for (const key in urlDatabase) {
     if (urlDatabase[key].userID === id) {
-      usersURLs.shortURL = key;
-      usersURLs.longURL = urlDatabase[key].longURL;
+      usersURLs[key] = urlDatabase[key].longURL;
     }
   }
   return usersURLs;
@@ -74,7 +73,7 @@ const users = {
 
 // console.log('lookup check, shoudl be userRandomID', retrieveUserID('user@example.com', users));
 
-// console.log(urlsForUser('12345'));
+console.log('urlsforuser',urlsForUser('12345'));
 
 app.get('/', (req, res) => {
   res.send('Hello!');
@@ -174,7 +173,7 @@ app.get('/urls', (req, res) => {
   }
   const templateVars = {
     user: users[req.cookies['user_id']],
-    urls: urlDatabase
+    urls: urlsForUser(req.cookies['user_id'])
   };
 console.log('templateVars.urls',templateVars.urls);
   res.render('urls_index', templateVars);
@@ -190,12 +189,16 @@ app.post('/urls', (req, res) => {
 })
 
 app.get('/u/:shortURL', (req, res) => {
+
+
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
 
 app.get('/urls/:shortURL', (req, res) => {
+
+
   const templateVars = {
     user: users[req.cookies['user_id']],
     shortURL: req.params.shortURL, 
