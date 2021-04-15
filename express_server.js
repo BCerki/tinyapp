@@ -41,6 +41,17 @@ const isLoggedIn = function (req) {
   return false;
 }
 
+const isOwnedByUser = function (req) {
+  const usersURLs = urlsForUser(req.cookies['user_id']);
+  console.log('usersURLs',usersURLs)
+  for (const key in usersURLs) {
+    if (req.params.shortURL === key) {
+      return true;
+    }
+  };
+  return false;
+}
+
 ///Middleware
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -67,7 +78,7 @@ const users = {
 
 
 app.get('/', (req, res) => {
-  console.log('isloggedin',isLoggedIn(req))
+  console.log('isloggedin', isLoggedIn(req))
   if (isLoggedIn(req)) {
     res.redirect('/urls');
   } else {
@@ -86,7 +97,6 @@ app.get('/login', (req, res) => {
 app.post('/login', (req, res) => {
   //if the email doesn't exist in the users object
   const retrievedUserID = retrieveUserIDBasedOnEmail(req.body.email, users);
-
   if (!retrievedUserID) {
     res.redirect(403, '/register');
     return;
@@ -144,7 +154,7 @@ app.post('/register', (req, res) => {
 });
 
 app.get('/urls/new', (req, res) => {
-  if (Object.keys(req.cookies).length === 0) {
+  if (!isLoggedIn(req)) {
     res.redirect('/login');
     return;
   }
@@ -164,10 +174,11 @@ app.get('/wall', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  if (Object.keys(req.cookies).length === 0) {
+  if (!isLoggedIn(req)) {
     res.redirect('/wall');
     return;
   }
+
   const templateVars = {
     user: users[req.cookies['user_id']],
     urls: urlsForUser(req.cookies['user_id'])
@@ -177,27 +188,18 @@ app.get('/urls', (req, res) => {
 })
 
 app.post('/urls', (req, res) => {
-  //if user isn't logged in, redirect them
-  if (Object.keys(req.cookies).length === 0) {
+  //is this really the right way to prevent people from getting where they shouldn't? I'm in post.
+  if (!isLoggedIn(req)) {
     res.redirect('/login');
     return;
   }
 
-  //if url doesn't belong to user, redirect them
-  const usersURLs = urlsForUser(req.cookies['user_id']);
-
-  for (const key in usersURLs) {
-    console.log('req.params.shortURL', req.params.shortURL)
-    console.log('key', key)
-    if (req.params.shortURL === key) {
-      res.render('urls_show', templateVars);
-    }
-  };
+  //create new record (new tinyURL) and add all the details to the urlDatabase
   const generatedShort = generateRandomString()
-  //changed both of these before I noticed cookie issue
   urlDatabase[generatedShort] = {};
   urlDatabase[generatedShort].longURL = req.body.longURL;
   urlDatabase[generatedShort].user_id = req.cookies.user_id;
+
   res.redirect(`/urls/${generatedShort}`);
 })
 
@@ -208,30 +210,26 @@ app.get('/u/:shortURL', (req, res) => {
 
 
 app.get('/urls/:shortURL', (req, res) => {
+
+  if (!isLoggedIn(req)) {
+    res.redirect('/login');
+    return;
+  }
+
+  //PROBLEM: This is blocking real owner from saving new URLs. I think adding new ones aren't going into the database properly
+  console.log('isownedbyuser',isOwnedByUser(req)); 
+  if (!isOwnedByUser(req)) {
+    res.redirect('/wall');
+    return;
+  }
+
   const templateVars = {
     user: users[req.cookies['user_id']],
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL
   };
 
-  //if user isn't logged in, redirect them
-  if (Object.keys(req.cookies).length === 0) {
-    res.redirect('/login');
-    return;
-  }
-
-  //if url doesn't belong to user, redirect them
-  const usersURLs = urlsForUser(req.cookies['user_id']);
-
-  for (const key in usersURLs) {
-    console.log('req.params.shortURL', req.params.shortURL)
-    console.log('key', key)
-    if (req.params.shortURL === key) {
-      res.render('urls_show', templateVars);
-    }
-  };
-
-  res.render('wall', templateVars);
+  res.render('urls_show', templateVars);
 
 })
 
@@ -246,21 +244,16 @@ app.post('/urls/:id', (req, res) => {
 
 app.post('/urls/:shortURL/delete', (req, res) => {
   //if user isn't logged in, redirect them
-  if (Object.keys(req.cookies).length === 0) {
+  if (!isLoggedIn(req)) {
     res.redirect('/login');
     return;
   }
 
-  //if url doesn't belong to user, redirect them
-  const usersURLs = urlsForUser(req.cookies['user_id']);
-
-  for (const key in usersURLs) {
-    console.log('req.params.shortURL', req.params.shortURL)
-    console.log('key', key)
-    if (req.params.shortURL === key) {
-      res.render('urls_show', templateVars);
-    }
-  };
+  //if url doesn't belong to user, redirect them--this might not be ultimate solution
+  if (!isOwnedByUser(req)) {
+    res.redirect('/wall');
+    return;
+  }
 
   console.log('urlDatabase before delete', urlDatabase)
   const urlToDelete = req.params.shortURL;
