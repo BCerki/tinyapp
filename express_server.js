@@ -27,7 +27,7 @@ const checkIfEmailAlreadyHasAccount = function (enteredEmail, users) {
   return false;
 };
 
-const retrieveUserID = function (enteredEmail, users) {
+const retrieveUserIDBasedOnEmail = function (enteredEmail, users) {
   for (const key in users) {
     if (enteredEmail === users[key].email) {
       return key;
@@ -36,6 +36,16 @@ const retrieveUserID = function (enteredEmail, users) {
   return null; //is this the best? many errors in the terminal
 }
 
+const urlsForUser = function(id) {
+  const usersURLs = {};
+  for (const key in urlDatabase) {
+    if (urlDatabase[key].userID === id) {
+      usersURLs.shortURL = key;
+      usersURLs.longURL = urlDatabase[key].longURL;
+    }
+  }
+  return usersURLs;
+};
 
 
 app.set('view engine', 'ejs');
@@ -43,7 +53,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "12345" },
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
@@ -64,6 +74,8 @@ const users = {
 
 // console.log('lookup check, shoudl be userRandomID', retrieveUserID('user@example.com', users));
 
+// console.log(urlsForUser('12345'));
+
 app.get('/', (req, res) => {
   res.send('Hello!');
 });
@@ -78,7 +90,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', (req, res) => {
   //if the email doesn't exist in the users object
-  const retrievedUserID = retrieveUserID(req.body.email, users);
+  const retrievedUserID = retrieveUserIDBasedOnEmail(req.body.email, users);
 
   if (!retrievedUserID) {
     res.redirect(403, '/register');
@@ -114,7 +126,7 @@ app.get('/register', (req, res) => {
 
 app.post('/register', (req, res) => {
 
-  const retrievedUserID = retrieveUserID(req.body.email, users);
+  const retrievedUserID = retrieveUserIDBasedOnEmail(req.body.email, users);
 
   if (!req.body.email || !req.body.password) {
     res.redirect(400, '/register'); //do something more specific than this? Compass unclear
