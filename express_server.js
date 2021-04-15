@@ -166,6 +166,7 @@ app.get('/wall', (req,res)=> {
   }
   res.render('wall', templateVars);
 });
+
 app.get('/urls', (req, res) => {
   if (Object.keys(req.cookies).length === 0) {
     res.redirect('/wall');
@@ -189,23 +190,26 @@ app.post('/urls', (req, res) => {
 })
 
 app.get('/u/:shortURL', (req, res) => {
-
-
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
 
 app.get('/urls/:shortURL', (req, res) => {
-
-
-  const templateVars = {
-    user: users[req.cookies['user_id']],
-    shortURL: req.params.shortURL, 
-    longURL: urlDatabase[req.params.shortURL].longURL
-  };
-  // console.log('longURL:', templateVars.longURL);
-  // console.log('shortURL:',templateVars.shortURL);
+  //if user isn't logged in, redirect them
+  if (Object.keys(req.cookies).length === 0) {
+    res.redirect('/login');
+    return;
+  }
+  //if url doesn't belong to user, redirect them
+  
+    const templateVars = {
+      user: users[req.cookies['user_id']],
+      shortURL: req.params.shortURL, 
+      longURL: urlDatabase[req.params.shortURL].longURL
+    };
+    
+ 
   res.render('urls_show', templateVars);
 
 })
