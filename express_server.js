@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcrypt');
 const app = express();
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
@@ -31,7 +32,7 @@ const urlsForUser = function (id) {
       usersURLs[key] = urlDatabase[key].longURL;
     }
   }
-  console.log('within function usersURLs',usersURLs)
+  // console.log('within function usersURLs',usersURLs)
   return usersURLs;
 };
 
@@ -42,7 +43,7 @@ const isLoggedIn = function (req) {
   return false;
 }
 
-const isOwnedByUser = function (req) {
+const urlIsOwnedByUser = function (req) {
   const usersURLs = urlsForUser(req.cookies['user_id']);
   // console.log('usersURLs',usersURLs)
   for (const key in usersURLs) {
@@ -64,6 +65,8 @@ const urlDatabase = {
 };
 
 ///"Database"
+
+//remove these later
 const users = {
   "12345": {
     id: "userRandomID",
@@ -81,7 +84,7 @@ const users = {
 
 ///Routes
 app.get('/', (req, res) => {
-  console.log('isloggedin', isLoggedIn(req))
+  // console.log('isloggedin', isLoggedIn(req))
   if (isLoggedIn(req)) {
     res.redirect('/urls');
   } else {
@@ -110,11 +113,15 @@ app.post('/login', (req, res) => {
     res.redirect(403, '/register');
     return;
   }
-  if (users[retrievedUserID].password !== req.body.password) {
+  if (!bcrypt.compareSync(req.body.password, users[retrievedUserID].password)) {
+    console.log('bcrypt users', users);
+    console.log('bcrypt req.body.password', req.body.password)
+    console.log('bcyrpt users[retrievedUserID].password', users[retrievedUserID].password)
     res.redirect(403, '/register');
-    return; //could probs combine this with above
+    return;
   }
-  console.log('retriveduserid', retrievedUserID);
+
+  // console.log('retriveduserid', retrievedUserID);
   res.cookie('user_id', retrievedUserID);
   res.redirect('/urls');
 });
@@ -148,11 +155,12 @@ app.post('/register', (req, res) => {
   users[user_id] = {};
   users[user_id].id = user_id;
   users[user_id].email = req.body.email;
-  users[user_id].password = req.body.password;
-  console.log('users object:', users);
+  users[user_id].password = bcrypt.hashSync(req.body.password, 10);
+  users[user_id].password
+  // console.log('users object:', users);
   res.cookie('user_id', user_id);
   res.redirect('/urls');
-  console.log('users object', users)
+  // console.log('users object', users)
 
 });
 
@@ -186,7 +194,7 @@ app.get('/urls', (req, res) => {
     user: users[req.cookies['user_id']],
     urls: urlsForUser(req.cookies['user_id'])
   };
-  console.log('templateVars.urls', templateVars.urls);
+  // console.log('templateVars.urls', templateVars.urls);
   res.render('urls_index', templateVars);
 })
 
@@ -202,7 +210,7 @@ app.post('/urls', (req, res) => {
   urlDatabase[generatedShort] = {};
   urlDatabase[generatedShort].longURL = req.body.longURL;
   urlDatabase[generatedShort].user_id = req.cookies.user_id;
-  console.log('urlDatabase',urlDatabase);
+  // console.log('urlDatabase',urlDatabase);
   res.redirect(`/urls/${generatedShort}`);
 })
 
@@ -219,17 +227,17 @@ app.get('/urls/:shortURL', (req, res) => {
     return;
   }
 
-  if (!isOwnedByUser(req)) {
+  if (!urlIsOwnedByUser(req)) {
     res.redirect('/wall');
     return;
   }
 
+  //
   const templateVars = {
     user: users[req.cookies['user_id']],
     shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL
   };
-
   res.render('urls_show', templateVars);
 
 })
@@ -244,14 +252,13 @@ app.post('/urls/:id', (req, res) => {
 });
 
 app.post('/urls/:shortURL/delete', (req, res) => {
-  //if user isn't logged in, redirect them
   if (!isLoggedIn(req)) {
     res.redirect('/login');
     return;
   }
 
   //if url doesn't belong to user, redirect them--this might not be ultimate solution
-  if (!isOwnedByUser(req)) {
+  if (!urlIsOwnedByUser(req)) {
     res.redirect('/wall');
     return;
   }
