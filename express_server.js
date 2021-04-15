@@ -36,7 +36,7 @@ const retrieveUserIDBasedOnEmail = function (enteredEmail, users) {
   return null; //is this the best? many errors in the terminal
 }
 
-const urlsForUser = function(id) {
+const urlsForUser = function (id) {
   const usersURLs = {};
   for (const key in urlDatabase) {
     if (urlDatabase[key].userID === id) {
@@ -73,7 +73,7 @@ const users = {
 
 // console.log('lookup check, shoudl be userRandomID', retrieveUserID('user@example.com', users));
 
-console.log('urlsforuser',urlsForUser('12345'));
+console.log('urlsforuser', urlsForUser('12345'));
 
 app.get('/', (req, res) => {
   res.send('Hello!');
@@ -83,7 +83,7 @@ app.get('/login', (req, res) => {
   const templateVars = {
     user: users[req.cookies['user_id']]
   }
-  res.render('login',templateVars);
+  res.render('login', templateVars);
 
 });
 
@@ -135,14 +135,14 @@ app.post('/register', (req, res) => {
     res.redirect(400, '/register');
     return;
   }
-    const user_id = generateRandomString();
-    users[user_id] = {};
-    users[user_id].id = user_id;
-    users[user_id].email = req.body.email;
-    users[user_id].password = req.body.password;
-    console.log('users object:', users);
-    res.cookie('user_id', user_id);
-    res.redirect('/urls');
+  const user_id = generateRandomString();
+  users[user_id] = {};
+  users[user_id].id = user_id;
+  users[user_id].email = req.body.email;
+  users[user_id].password = req.body.password;
+  console.log('users object:', users);
+  res.cookie('user_id', user_id);
+  res.redirect('/urls');
   console.log('users object', users)
 
 });
@@ -160,7 +160,7 @@ app.get('/urls/new', (req, res) => {
 });
 
 
-app.get('/wall', (req,res)=> {
+app.get('/wall', (req, res) => {
   const templateVars = {
     user: users[req.cookies['user_id']]
   }
@@ -176,11 +176,27 @@ app.get('/urls', (req, res) => {
     user: users[req.cookies['user_id']],
     urls: urlsForUser(req.cookies['user_id'])
   };
-console.log('templateVars.urls',templateVars.urls);
+  console.log('templateVars.urls', templateVars.urls);
   res.render('urls_index', templateVars);
 })
 
 app.post('/urls', (req, res) => {
+  //if user isn't logged in, redirect them
+  if (Object.keys(req.cookies).length === 0) {
+    res.redirect('/login');
+    return;
+  }
+
+  //if url doesn't belong to user, redirect them
+  const usersURLs = urlsForUser(req.cookies['user_id']);
+
+  for (const key in usersURLs) {
+    console.log('req.params.shortURL', req.params.shortURL)
+    console.log('key', key)
+    if (req.params.shortURL === key) {
+      res.render('urls_show', templateVars);
+    }
+  };
   const generatedShort = generateRandomString()
   //changed both of these before I noticed cookie issue
   urlDatabase[generatedShort] = {};
@@ -198,7 +214,7 @@ app.get('/u/:shortURL', (req, res) => {
 app.get('/urls/:shortURL', (req, res) => {
   const templateVars = {
     user: users[req.cookies['user_id']],
-    shortURL: req.params.shortURL, 
+    shortURL: req.params.shortURL,
     longURL: urlDatabase[req.params.shortURL].longURL
   };
 
@@ -210,16 +226,16 @@ app.get('/urls/:shortURL', (req, res) => {
 
   //if url doesn't belong to user, redirect them
   const usersURLs = urlsForUser(req.cookies['user_id']);
-  
+
   for (const key in usersURLs) {
-    console.log('req.params.shortURL',req.params.shortURL)
-    console.log('key',key)
-    if (req.params.shortURL === key){
+    console.log('req.params.shortURL', req.params.shortURL)
+    console.log('key', key)
+    if (req.params.shortURL === key) {
       res.render('urls_show', templateVars);
     }
   };
-  
-  res.render('wall',templateVars);
+
+  res.render('wall', templateVars);
 
 })
 
@@ -233,19 +249,27 @@ app.post('/urls/:id', (req, res) => {
 });
 
 app.post('/urls/:shortURL/delete', (req, res) => {
-    //if user isn't logged in, redirect them
-    if (Object.keys(req.cookies).length === 0) {
-      res.redirect('/login');
-      return;
-    }
-  
-    //if url doesn't belong to user, redirect them
-    const usersURLs = urlsForUser(req.cookies['user_id']);
+  //if user isn't logged in, redirect them
+  if (Object.keys(req.cookies).length === 0) {
+    res.redirect('/login');
+    return;
+  }
 
-  console.log('urlDatabase before delete',urlDatabase)
+  //if url doesn't belong to user, redirect them
+  const usersURLs = urlsForUser(req.cookies['user_id']);
+
+  for (const key in usersURLs) {
+    console.log('req.params.shortURL', req.params.shortURL)
+    console.log('key', key)
+    if (req.params.shortURL === key) {
+      res.render('urls_show', templateVars);
+    }
+  };
+
+  console.log('urlDatabase before delete', urlDatabase)
   const urlToDelete = req.params.shortURL;
   delete urlDatabase[urlToDelete];
-  console.log('urlDatabase after delete',urlDatabase)
+  console.log('urlDatabase after delete', urlDatabase)
   res.redirect('/urls');
 });
 
