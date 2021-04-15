@@ -18,13 +18,20 @@ const getUserByEmail = function (enteredEmail, database) {
 };
 
 const urlsForUser = function (id, urlDatabase) {
+  // console.log('')
+  // console.log('urlsforuser function starts')
   const usersURLs = {};
+  // console.log('id',id);
   for (const key in urlDatabase) {
+    // console.log('key', key)
     if (urlDatabase[key].user_id === id) {
+      // console.log('urlDatabase[key].user_id',urlDatabase[key].user_id)
       usersURLs[key] = urlDatabase[key].longURL;
     }
   }
   // console.log('within function usersURLs',usersURLs)
+  // console.log('urlsforuser function ends')
+  // console.log('')
   return usersURLs;
 };
 
@@ -36,11 +43,14 @@ const isLoggedIn = function (req) {
   return false;
 }
 
-const urlIsOwnedByUser = function (req) {
-  console.log('req.session.user_id',req.session.user_id);
-  const usersURLs = urlsForUser(req.session.user_id); //this is probs broken
-  // console.log('usersURLs',usersURLs)
+const urlIsOwnedByUser = function (req,urlDatabase) {
+  // console.log('req.session.user_id',req.session.user_id);
+  // console.log('urlsForUser(req.session.user_id)',urlsForUser(req.session.user_id));
+  // console.log('req.params.shortURL',req.params.shortURL);
+  const usersURLs = urlsForUser(req.session.user_id, urlDatabase); //this is probs broken
+
   for (const key in usersURLs) {
+    console.log('on loop key',key)
     if (req.params.shortURL === key) {
       return true;
     }

@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
-const {generateRandomString,getUserByEmail, urlsForUser, isLoggedIn, urlIsOwnedByUser} = require('./helpers.js')
+const { generateRandomString, getUserByEmail, urlsForUser, isLoggedIn, urlIsOwnedByUser } = require('./helpers.js')
 const cookieSession = require('cookie-session');
 const app = express();
 const bodyParser = require('body-parser');
@@ -118,7 +118,7 @@ app.post('/register', (req, res) => {
   users[user_id].password
   // console.log('users object:', users);
   req.session.user_id = user_id;
- 
+
   res.redirect('/urls');
   // console.log('users object', users)
 
@@ -170,7 +170,7 @@ app.post('/urls', (req, res) => {
   urlDatabase[generatedShort] = {};
   urlDatabase[generatedShort].longURL = req.body.longURL;
   urlDatabase[generatedShort].user_id = req.session.user_id; //just session?
-  // console.log('urlDatabase',urlDatabase);
+  console.log('urlDatabase', urlDatabase);
   res.redirect(`/urls/${generatedShort}`);
 })
 
@@ -181,19 +181,20 @@ app.get('/u/:shortURL', (req, res) => {
 
 
 app.get('/urls/:shortURL', (req, res) => {
-
+  console.log('');
+  console.log("getting '/urls/:shortURL'")
   if (!isLoggedIn(req)) {
     res.redirect('/login');
     return;
   }
 
   //PROBLEM
-  // if (!urlIsOwnedByUser(req)) {
-  //   res.redirect('/wall');
-  //   return;
-  // }
+  if (!urlIsOwnedByUser(req, urlDatabase)) {
+    res.redirect('/wall');
+    return;
+  }
 
-  //
+
   const templateVars = {
     user: users[req.session.user_id],
     shortURL: req.params.shortURL,
@@ -215,17 +216,17 @@ app.post('/urls/:id', (req, res) => {
 
 app.post('/urls/:shortURL/delete', (req, res) => {
 
-  
+
   if (!isLoggedIn(req)) {
     res.redirect('/login');
     return;
   }
 
   //PROBLEM--blocking people when it shouldn't
-  if (!urlIsOwnedByUser(req)) {
-    res.redirect('/wall');
-    return;
-  }
+  // if (!urlIsOwnedByUser(req, urlDatabase)) {
+  //   res.redirect('/wall');
+  //   return;
+  // }
 
   // console.log('urlDatabase before delete', urlDatabase)
   const urlToDelete = req.params.shortURL;
