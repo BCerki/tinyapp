@@ -4,28 +4,16 @@ const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
 const PORT = 8080;
 
+///Functions (move to module later)
 const generateRandomString = function () {
   const permittedChars = 'abcdefghijklmnopqrstuvwxyz0123456789'
   let string = '';
   for (let i = 0; i <= 6; i++) {
-    // let characterCode = Math.floor(Math.random()*26) + 65;
-    // let char = String.fromCharCode(characterCode);
-    // string += char;
     let char = Math.floor(Math.random() * 36);
     string += permittedChars[char];
   }
   return string;
 }
-// console.log('randomstring', generateRandomString());
-
-const checkIfEmailAlreadyHasAccount = function (enteredEmail, users) {
-  for (const key in users) {
-    if (enteredEmail === users[key].email) {
-      return true;
-    }
-  }
-  return false;
-};
 
 const retrieveUserIDBasedOnEmail = function (enteredEmail, users) {
   for (const key in users) {
@@ -46,7 +34,14 @@ const urlsForUser = function (id) {
   return usersURLs;
 };
 
+const isLoggedIn = function (req) {
+  if (req.cookies && Object.keys(req.cookies).length !== 0) {
+    return true;
+  }
+  return false;
+}
 
+///Middleware
 app.set('view engine', 'ejs');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
@@ -56,6 +51,7 @@ const urlDatabase = {
   i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
+///"Database"
 const users = {
   "12345": {
     id: "userRandomID",
@@ -69,14 +65,14 @@ const users = {
   }
 }
 
-// console.log('checking password, should return true:',checkPassword("user@example.com","purple-monkey-dinosaur",users))
-
-// console.log('lookup check, shoudl be userRandomID', retrieveUserID('user@example.com', users));
-
-console.log('urlsforuser', urlsForUser('12345'));
 
 app.get('/', (req, res) => {
-  res.send('Hello!');
+  console.log('isloggedin',isLoggedIn(req))
+  if (isLoggedIn(req)) {
+    res.redirect('/urls');
+  } else {
+    res.redirect('/login');
+  }
 });
 
 app.get('/login', (req, res) => {
