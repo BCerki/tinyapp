@@ -1,60 +1,13 @@
 const express = require('express');
 const bcrypt = require('bcrypt');
+const {generateRandomString,getUserByEmail, urlsForUser, isLoggedIn, urlIsOwnedByUser} = require('./helpers.js')
 const cookieSession = require('cookie-session');
 const app = express();
 const bodyParser = require('body-parser');
 // const cookieParser = require('cookie-parser');
 const PORT = 8080;
+console.log(generateRandomString());
 
-///Functions (move to module later)
-const generateRandomString = function () {
-  const permittedChars = 'abcdefghijklmnopqrstuvwxyz0123456789'
-  let string = '';
-  for (let i = 0; i <= 6; i++) {
-    let char = Math.floor(Math.random() * 36);
-    string += permittedChars[char];
-  }
-  return string;
-}
-
-const retrieveUserIDBasedOnEmail = function (enteredEmail, users) {
-  for (const key in users) {
-    if (enteredEmail === users[key].email) {
-      return key;
-    }
-  }
-  return null; //is this the best? many errors in the terminal
-}
-
-const urlsForUser = function (id) {
-  const usersURLs = {};
-  for (const key in urlDatabase) {
-    if (urlDatabase[key].user_id === id) {
-      usersURLs[key] = urlDatabase[key].longURL;
-    }
-  }
-  // console.log('within function usersURLs',usersURLs)
-  return usersURLs;
-};
-
-const isLoggedIn = function (req) {
-  if (req.session.user_id) {
-    return true;
-  }
-  return false;
-}
-
-const urlIsOwnedByUser = function (req) {
-  console.log('req.session.user_id',req.session.user_id);
-  const usersURLs = urlsForUser(req.session.user_id); //this is probs broken
-  // console.log('usersURLs',usersURLs)
-  for (const key in usersURLs) {
-    if (req.params.shortURL === key) {
-      return true;
-    }
-  };
-  return false;
-}
 
 ///Middleware
 app.set('view engine', 'ejs');
@@ -108,7 +61,7 @@ app.get('/login', (req, res) => {
 
 app.post('/login', (req, res) => {
   //if the email doesn't exist in the users object
-  const retrievedUserID = retrieveUserIDBasedOnEmail(req.body.email, users);
+  const retrievedUserID = getUserByEmail(req.body.email, users);
   if (!retrievedUserID) {
     res.redirect(403, '/register');
     return;
@@ -147,7 +100,7 @@ app.get('/register', (req, res) => {
 
 app.post('/register', (req, res) => {
 
-  const retrievedUserID = retrieveUserIDBasedOnEmail(req.body.email, users);
+  const retrievedUserID = getUserByEmail(req.body.email, users);
 
   if (!req.body.email || !req.body.password) {
     res.redirect(400, '/register'); //do something more specific than this? Compass unclear
@@ -199,7 +152,7 @@ app.get('/urls', (req, res) => {
 
   const templateVars = {
     user: users[req.session.user_id],
-    urls: urlsForUser(req.session.user_id)
+    urls: urlsForUser(req.session.user_id, urlDatabase)
   };
   // console.log('templateVars.urls', templateVars.urls);
   res.render('urls_index', templateVars);
@@ -234,10 +187,11 @@ app.get('/urls/:shortURL', (req, res) => {
     return;
   }
 
-  if (!urlIsOwnedByUser(req)) {
-    res.redirect('/wall');
-    return;
-  }
+  //PROBLEM
+  // if (!urlIsOwnedByUser(req)) {
+  //   res.redirect('/wall');
+  //   return;
+  // }
 
   //
   const templateVars = {
@@ -250,6 +204,7 @@ app.get('/urls/:shortURL', (req, res) => {
 })
 
 app.post('/urls/:id', (req, res) => {
+  //PROBLEM something broken here, can edit but then it deletes (or hides?) them
   const originalShort = req.params.id;
   // console.log('req.params',req.params);
 
@@ -259,12 +214,14 @@ app.post('/urls/:id', (req, res) => {
 });
 
 app.post('/urls/:shortURL/delete', (req, res) => {
+
+  
   if (!isLoggedIn(req)) {
     res.redirect('/login');
     return;
   }
 
-  //if url doesn't belong to user, redirect them--this might not be ultimate solution
+  //PROBLEM--blocking people when it shouldn't
   if (!urlIsOwnedByUser(req)) {
     res.redirect('/wall');
     return;
