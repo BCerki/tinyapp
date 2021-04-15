@@ -148,8 +148,18 @@ app.get('/urls/new', (req, res) => {
   res.render('urls_new', templateVars);
 });
 
+
+app.get('/wall', (req,res)=> {
+  const templateVars = {
+    user: users[req.cookies['user_id']]
+  }
+  res.render('wall', templateVars);
+});
 app.get('/urls', (req, res) => {
-  
+  if (Object.keys(req.cookies).length === 0) {
+    res.redirect('/wall');
+    return;
+  }
   const templateVars = {
     user: users[req.cookies['user_id']],
     urls: urlDatabase
