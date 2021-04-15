@@ -14,8 +14,8 @@ const getUserByEmail = function (enteredEmail, database) {
       return key;
     }
   }
-  return null; //is this the best? many errors in the terminal
-}
+  return;
+};
 
 const urlsForUser = function (id, urlDatabase) {
   const usersURLs = {};
