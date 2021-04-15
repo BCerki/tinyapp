@@ -196,21 +196,29 @@ app.get('/u/:shortURL', (req, res) => {
 
 
 app.get('/urls/:shortURL', (req, res) => {
+  const templateVars = {
+    user: users[req.cookies['user_id']],
+    shortURL: req.params.shortURL, 
+    longURL: urlDatabase[req.params.shortURL].longURL
+  };
+
   //if user isn't logged in, redirect them
   if (Object.keys(req.cookies).length === 0) {
     res.redirect('/login');
     return;
   }
   //if url doesn't belong to user, redirect them
+  const usersURLs = urlsForUser(req.cookies['user_id']);
   
-    const templateVars = {
-      user: users[req.cookies['user_id']],
-      shortURL: req.params.shortURL, 
-      longURL: urlDatabase[req.params.shortURL].longURL
-    };
-    
- 
-  res.render('urls_show', templateVars);
+  for (const key in usersURLs) {
+    console.log('req.params.shortURL',req.params.shortURL)
+    console.log('key',key)
+    if (req.params.shortURL === key){
+      res.render('urls_show', templateVars);
+    }
+  };
+  
+  res.render('wall',templateVars);
 
 })
 
