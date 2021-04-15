@@ -137,7 +137,7 @@ app.post('/register', (req, res) => {
 });
 
 app.get('/urls/new', (req, res) => {
-  // console.log('req.cookies',Object.keys(req.cookies))
+  // this if statement is the problem
   if (Object.keys(req.cookies).length === 0) {
     res.redirect('/login');
     return;
@@ -148,7 +148,6 @@ app.get('/urls/new', (req, res) => {
   // console.log(req);
   res.render('urls_new', templateVars);
 });
-
 
 app.get('/urls', (req, res) => {
   // console.log('request',req.cookies);
@@ -162,9 +161,12 @@ app.get('/urls', (req, res) => {
 
 app.post('/urls', (req, res) => {
   const generatedShort = generateRandomString()
-  urlDatabase[generatedShort] = req.body.longURL;
-  console.log('post urls req.cookies',req.cookies);
-  // console.log(urlDatabase);
+  //changed both of these before I noticed cookie issue
+  urlDatabase[generatedShort] = {};
+  urlDatabase[generatedShort].longURL = req.body.longURL;
+  urlDatabase[generatedShort].userID = req.cookies.userID;
+  console.log('urldatabase',urlDatabase);
+  console.log('req.cookies',req.cookies)
   res.redirect(`/urls/${generatedShort}`);
 })
 
