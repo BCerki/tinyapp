@@ -27,10 +27,11 @@ const retrieveUserIDBasedOnEmail = function (enteredEmail, users) {
 const urlsForUser = function (id) {
   const usersURLs = {};
   for (const key in urlDatabase) {
-    if (urlDatabase[key].userID === id) {
+    if (urlDatabase[key].user_id === id) {
       usersURLs[key] = urlDatabase[key].longURL;
     }
   }
+  console.log('within function usersURLs',usersURLs)
   return usersURLs;
 };
 
@@ -43,7 +44,7 @@ const isLoggedIn = function (req) {
 
 const isOwnedByUser = function (req) {
   const usersURLs = urlsForUser(req.cookies['user_id']);
-  console.log('usersURLs',usersURLs)
+  // console.log('usersURLs',usersURLs)
   for (const key in usersURLs) {
     if (req.params.shortURL === key) {
       return true;
@@ -58,8 +59,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const urlDatabase = {
-  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "12345" },
-  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
+  b6UTxQ: { longURL: "https://www.tsn.ca", user_id: "12345" },
+  i3BoGr: { longURL: "https://www.google.ca", user_id: "aJ48lW" }
 };
 
 ///"Database"
@@ -77,6 +78,8 @@ const users = {
 }
 
 
+
+///Routes
 app.get('/', (req, res) => {
   console.log('isloggedin', isLoggedIn(req))
   if (isLoggedIn(req)) {
@@ -199,7 +202,7 @@ app.post('/urls', (req, res) => {
   urlDatabase[generatedShort] = {};
   urlDatabase[generatedShort].longURL = req.body.longURL;
   urlDatabase[generatedShort].user_id = req.cookies.user_id;
-
+  console.log('urlDatabase',urlDatabase);
   res.redirect(`/urls/${generatedShort}`);
 })
 
@@ -216,8 +219,6 @@ app.get('/urls/:shortURL', (req, res) => {
     return;
   }
 
-  //PROBLEM: This is blocking real owner from saving new URLs. I think adding new ones aren't going into the database properly
-  console.log('isownedbyuser',isOwnedByUser(req)); 
   if (!isOwnedByUser(req)) {
     res.redirect('/wall');
     return;
@@ -255,10 +256,10 @@ app.post('/urls/:shortURL/delete', (req, res) => {
     return;
   }
 
-  console.log('urlDatabase before delete', urlDatabase)
+  // console.log('urlDatabase before delete', urlDatabase)
   const urlToDelete = req.params.shortURL;
   delete urlDatabase[urlToDelete];
-  console.log('urlDatabase after delete', urlDatabase)
+  // console.log('urlDatabase after delete', urlDatabase)
   res.redirect('/urls');
 });
 
