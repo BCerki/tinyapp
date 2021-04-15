@@ -207,6 +207,7 @@ app.get('/urls/:shortURL', (req, res) => {
     res.redirect('/login');
     return;
   }
+
   //if url doesn't belong to user, redirect them
   const usersURLs = urlsForUser(req.cookies['user_id']);
   
@@ -232,8 +233,19 @@ app.post('/urls/:id', (req, res) => {
 });
 
 app.post('/urls/:shortURL/delete', (req, res) => {
+    //if user isn't logged in, redirect them
+    if (Object.keys(req.cookies).length === 0) {
+      res.redirect('/login');
+      return;
+    }
+  
+    //if url doesn't belong to user, redirect them
+    const usersURLs = urlsForUser(req.cookies['user_id']);
+
+  console.log('urlDatabase before delete',urlDatabase)
   const urlToDelete = req.params.shortURL;
   delete urlDatabase[urlToDelete];
+  console.log('urlDatabase after delete',urlDatabase)
   res.redirect('/urls');
 });
 
