@@ -43,8 +43,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 const urlDatabase = {
-  "b2xVn2": "http://www.lighthouselabs.ca",
-  "9sm5xK": "http://www.google.com"
+  b6UTxQ: { longURL: "https://www.tsn.ca", userID: "aJ48lW" },
+  i3BoGr: { longURL: "https://www.google.ca", userID: "aJ48lW" }
 };
 
 const users = {
@@ -124,20 +124,19 @@ app.post('/register', (req, res) => {
     res.redirect(400, '/register');
     return;
   }
-    const userID = generateRandomString();
-    users[userID] = {};
-    users[userID].id = userID;
-    users[userID].email = req.body.email;
-    users[userID].password = req.body.password;
+    const user_id = generateRandomString();
+    users[user_id] = {};
+    users[user_id].id = user_id;
+    users[user_id].email = req.body.email;
+    users[user_id].password = req.body.password;
     console.log('users object:', users);
-    res.cookie('user_id', userID);
+    res.cookie('user_id', user_id);
     res.redirect('/urls');
   console.log('users object', users)
 
 });
 
 app.get('/urls/new', (req, res) => {
-  // this if statement is the problem
   if (Object.keys(req.cookies).length === 0) {
     res.redirect('/login');
     return;
@@ -150,12 +149,12 @@ app.get('/urls/new', (req, res) => {
 });
 
 app.get('/urls', (req, res) => {
-  // console.log('request',req.cookies);
+  
   const templateVars = {
     user: users[req.cookies['user_id']],
     urls: urlDatabase
   };
-
+console.log('templateVars.urls',templateVars.urls);
   res.render('urls_index', templateVars);
 })
 
@@ -164,14 +163,12 @@ app.post('/urls', (req, res) => {
   //changed both of these before I noticed cookie issue
   urlDatabase[generatedShort] = {};
   urlDatabase[generatedShort].longURL = req.body.longURL;
-  urlDatabase[generatedShort].userID = req.cookies.userID;
-  console.log('urldatabase',urlDatabase);
-  console.log('req.cookies',req.cookies)
+  urlDatabase[generatedShort].user_id = req.cookies.user_id;
   res.redirect(`/urls/${generatedShort}`);
 })
 
 app.get('/u/:shortURL', (req, res) => {
-  const longURL = urlDatabase[req.params.shortURL];
+  const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
@@ -179,7 +176,8 @@ app.get('/u/:shortURL', (req, res) => {
 app.get('/urls/:shortURL', (req, res) => {
   const templateVars = {
     user: users[req.cookies['user_id']],
-    shortURL: req.params.shortURL, longURL: urlDatabase[req.params.shortURL]
+    shortURL: req.params.shortURL, 
+    longURL: urlDatabase[req.params.shortURL].longURL
   };
   // console.log('longURL:', templateVars.longURL);
   // console.log('shortURL:',templateVars.shortURL);
