@@ -169,7 +169,7 @@ app.post('/urls', (req, res) => {
 app.get('/u/:shortURL', (req, res) => {
   //if the shortURL doesn't exist in the database, redirect
   if (!urlDatabase[req.params.shortURL]) {
-    return res.status(404).send('This tinyURL does not exist');
+    return res.status(404).send('This tinyURL does not exist. If you think it should, please verify that the long URL is spelled correctly and includes http:// or https://');
   }
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
