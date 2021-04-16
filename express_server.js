@@ -53,12 +53,15 @@ app.post('/login', (req, res) => {
   if (!bcrypt.compareSync(req.body.password, users[retrievedUserID].password)) {
     return res.status(403).send('The email or password is incorrect');
   }
+  //Set cookie if login details are correct
+  req.session.user_id = retrievedUserID;
   res.redirect('/urls');
 });
 
 app.post('/logout', (req, res) => {
+  //Clear cookie
+  req.session = null;
   //Redirecting to /urls will ultimately land the logged-out user at /wall because /urls redirects logged-out users
-  req.session = null
   res.redirect('/urls');
 });
 
@@ -88,11 +91,10 @@ app.post('/register', (req, res) => {
   users[user_id].id = user_id;
   users[user_id].email = req.body.email;
   users[user_id].password = bcrypt.hashSync(req.body.password, 10);
+  //Set cookie
   req.session.user_id = user_id;
 
   res.redirect('/urls');
-
-
 });
 
 app.get('/urls/new', (req, res) => {
