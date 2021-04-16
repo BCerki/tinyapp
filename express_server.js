@@ -1,7 +1,7 @@
 ///Modules
 const express = require('express');
 const bcrypt = require('bcrypt');
-const { generateRandomString, getUserByEmail, urlsForUser, isLoggedIn, urlIsOwnedByUser } = require('./helpers.js')
+const { generateRandomString, getUserByEmail, urlsForUser, isLoggedIn, urlIsOwnedByUser } = require('./helpers.js');
 const cookieSession = require('cookie-session');
 const app = express();
 const bodyParser = require('body-parser');
@@ -22,7 +22,7 @@ const urlDatabase = {
   i3BoGr: { longURL: "https://www.google.ca", user_id: "aJ48lW" }
 };
 
-const users = {}
+const users = {};
 
 
 ///Routes
@@ -39,7 +39,7 @@ app.get('/login', (req, res) => {
   }
   const templateVars = {
     user: users[req.session.user_id]
-  }
+  };
   res.render('login', templateVars);
 });
 
@@ -68,7 +68,7 @@ app.get('/register', (req, res) => {
   const templateVars = {
     user: users[req.session.user_id]
   };
-  res.render('registration', templateVars)
+  res.render('registration', templateVars);
 });
 
 app.post('/register', (req, res) => {
@@ -100,7 +100,7 @@ app.get('/urls/new', (req, res) => {
   }
   const templateVars = {
     user: users[req.session.user_id]
-  }
+  };
 
   res.render('urls_new', templateVars);
 });
@@ -120,7 +120,7 @@ app.get('/urls', (req, res) => {
     urls: urlsForUser(req.session.user_id, urlDatabase)
   };
   res.render('urls_index', templateVars);
-})
+});
 
 app.post('/urls', (req, res) => {
   if (!isLoggedIn(req)) {
@@ -128,12 +128,12 @@ app.post('/urls', (req, res) => {
   }
 
   //Create new record (new tinyURL) and add all the details to the urlDatabase
-  const generatedShort = generateRandomString()
+  const generatedShort = generateRandomString();
   urlDatabase[generatedShort] = {};
   urlDatabase[generatedShort].longURL = req.body.longURL;
   urlDatabase[generatedShort].user_id = req.session.user_id;
   res.redirect(`/urls/${generatedShort}`);
-})
+});
 
 app.get('/u/:shortURL', (req, res) => {
   //If the shortURL doesn't exist in the database (possibly because the user typed it wrong), advise user
@@ -149,14 +149,13 @@ app.get('/urls/:shortURL', (req, res) => {
   //If the tiny URL isn't in the database, advise user
   if (!(Object.keys(urlDatabase).includes(req.params.shortURL))) {
     res.status(404).send('Tiny url does not exist');
-  };
+  }
 
   if (!isLoggedIn(req)) {
     return res.redirect('/wall');
   }
-  console.log('in express server req.params.shortURL',req.params.shortURL)
   if (!urlIsOwnedByUser(req, urlDatabase)) {
-    return res.status(403).send('You do not have permission to view this page')
+    return res.status(403).send('You do not have permission to view this page');
   }
 
   const templateVars = {
@@ -165,12 +164,13 @@ app.get('/urls/:shortURL', (req, res) => {
     longURL: urlDatabase[req.params.shortURL].longURL
   };
   res.render('urls_show', templateVars);
-})
+});
 
 app.post('/urls/:id', (req, res) => {
+  //Give req.params.shortURL a value so when urlIsOwnedByUser uses it, it's defined (since here the path uses :id instead of :shortURL)
   req.params.shortURL = req.params.id;
   if (!urlIsOwnedByUser(req, urlDatabase)) {
-    return res.status(403).send('You do not have permission to view this page')
+    return res.status(403).send('You do not have permission to view this page');
   }
 
   //Link an existing short URL to a new user-specified long URL
@@ -199,7 +199,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
 
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
-})
+});
 
 app.get('/*', (req, res) => {
   res.status(404).send('Sorry, this page does not exist');
