@@ -18,10 +18,10 @@ const getUserByEmail = function (enteredEmail, database) {
 };
 
 const urlsForUser = function (id, urlDatabase) {
-  // console.log('')
-  // console.log('urlsforuser function starts')
+  console.log('')
+  console.log('urlsforuser function starts')
   const usersURLs = {};
-  // console.log('id',id);
+  console.log('id',id);
   for (const key in urlDatabase) {
     // console.log('key', key)
     if (urlDatabase[key].user_id === id) {
@@ -29,9 +29,9 @@ const urlsForUser = function (id, urlDatabase) {
       usersURLs[key] = urlDatabase[key].longURL;
     }
   }
-  // console.log('within function usersURLs',usersURLs)
-  // console.log('urlsforuser function ends')
-  // console.log('')
+  console.log('within function usersURLs',usersURLs)
+  console.log('urlsforuser function ends')
+  console.log('')
   return usersURLs;
 };
 
@@ -43,9 +43,11 @@ const isLoggedIn = function (req) {
 }
 //don't pass in req for next time
 const urlIsOwnedByUser = function (req,urlDatabase) {
-  // console.log('req.session.user_id',req.session.user_id);
-  // console.log('urlsForUser(req.session.user_id)',urlsForUser(req.session.user_id));
-  // console.log('req.params.shortURL',req.params.shortURL);
+  console.log('')
+  console.log('url is owned by user FUNCTION STARTS')
+  console.log('req.session.user_id',req.session.user_id);
+  console.log('calling urlsForUser',urlsForUser(req.session.user_id));
+  console.log('req.params.shortURL',req.params.shortURL);
   const usersURLs = urlsForUser(req.session.user_id, urlDatabase); //this is probs broken
 
   for (const key in usersURLs) {
@@ -54,7 +56,10 @@ const urlIsOwnedByUser = function (req,urlDatabase) {
       return true;
     }
   };
+  console.log('url is owned by user function ends')
+  console.log('')
   return false;
+  
 }
 
 module.exports = {generateRandomString,getUserByEmail, urlsForUser, isLoggedIn, urlIsOwnedByUser}
