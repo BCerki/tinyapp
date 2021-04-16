@@ -113,14 +113,21 @@ app.post('/register', (req, res) => {
 });
 
 app.get('/urls/new', (req, res) => {
-  if (!isLoggedIn(req)) {
+  const user = users[req.session.user_id];
+  if (!user) {
     res.redirect('/login');
     return;
   }
   const templateVars = {
-    user: users[req.session.user_id]
+    user: user
   }
 
+  
+  console.log('users',users)
+  console.log('users[req.session.user_id]',users[req.session.user_id])
+  console.log('req.session.user_id',req.session.user_id)
+  console.log('templateVars.user',templateVars.user)
+  
   res.render('urls_new', templateVars);
 });
 
@@ -215,7 +222,7 @@ app.post('/urls/:shortURL/delete', (req, res) => {
   }
 
   if (!urlIsOwnedByUser(req, urlDatabase)) {
-    return res.status(403).send('You do not have permission to view this page');
+    return res.status(403).send('You do not have permission to delete this url');
   }
 
   console.log('urlDatabase before delete', urlDatabase)
@@ -230,8 +237,8 @@ app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 })
 
-app.get('*', (req, res) => {
-  res.send(404).send('Sorry, this page does not exist');
+app.get('/*', (req, res) => {
+  res.status(404).send('Sorry, this page does not exist');
 });
 
 app.listen(PORT, () => {

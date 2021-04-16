@@ -41,7 +41,7 @@ const isLoggedIn = function (req) {
   }
   return false;
 }
-
+//don't pass in req for next time
 const urlIsOwnedByUser = function (req,urlDatabase) {
   // console.log('req.session.user_id',req.session.user_id);
   // console.log('urlsForUser(req.session.user_id)',urlsForUser(req.session.user_id));
