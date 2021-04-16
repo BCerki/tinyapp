@@ -58,6 +58,7 @@ app.post('/login', (req, res) => {
 
 app.post('/logout', (req, res) => {
   //Redirecting to /urls will ultimately land the logged-out user at /wall because /urls redirects logged-out users
+  req.session = null
   res.redirect('/urls');
 });
 
