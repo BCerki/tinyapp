@@ -1,7 +1,7 @@
 const generateRandomString = function () {
   const permittedChars = 'abcdefghijklmnopqrstuvwxyz0123456789'
   let string = '';
-  for (let i = 0; i <= 6; i++) {
+  for (let i = 0; i <= 5; i++) {
     let char = Math.floor(Math.random() * 36);
     string += permittedChars[char];
   }
@@ -36,7 +36,6 @@ const urlsForUser = function (id, urlDatabase) {
 };
 
 const isLoggedIn = function (req) {
-  //This just checks if the cookie exists, is that enough?
   if (req.session.user_id) {
     return true;
   }

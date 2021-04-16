@@ -6,7 +6,6 @@ const app = express();
 const bodyParser = require('body-parser');
 // const cookieParser = require('cookie-parser');
 const PORT = 8080;
-console.log(generateRandomString());
 
 
 ///Middleware
@@ -43,7 +42,6 @@ const users = {
 
 ///Routes
 app.get('/', (req, res) => {
-  // console.log('isloggedin', isLoggedIn(req))
   if (isLoggedIn(req)) {
     res.redirect('/urls');
   } else {
@@ -52,6 +50,9 @@ app.get('/', (req, res) => {
 });
 
 app.get('/login', (req, res) => {
+  if (isLoggedIn(req)) {
+    return res.redirect('/urls');
+  }
   const templateVars = {
     user: users[req.session.user_id]
   }
@@ -60,41 +61,31 @@ app.get('/login', (req, res) => {
 });
 
 app.post('/login', (req, res) => {
-  //if the email doesn't exist in the users object
   const retrievedUserID = getUserByEmail(req.body.email, users);
-  if (!retrievedUserID) {
-    res.redirect(403, '/register');
-    return;
-  }
+  if (!retrievedUserID || users[retrievedUserID].email !== req.body.email) {
+    return res.status(403).send('The email or password is incorrect');
 
-  //if the email or password are wrong
-  if (users[retrievedUserID].email !== req.body.email) {
-    res.redirect(403, '/register');
-    return;
   }
   if (!bcrypt.compareSync(req.body.password, users[retrievedUserID].password)) {
-    console.log('bcrypt users', users);
-    console.log('bcrypt req.body.password', req.body.password)
-    console.log('bcyrpt users[retrievedUserID].password', users[retrievedUserID].password)
-    res.redirect(403, '/register');
-    return;
+    return res.status(403).send('The email or password is incorrect');
   }
-
-  // console.log('retriveduserid', retrievedUserID);
-  req.session.user_id = retrievedUserID;
+  // req.session.user_id = retrievedUserID;
   res.redirect('/urls');
 });
 
 app.post('/logout', (req, res) => {
   req.session = null;
+  //Redirecting to /urls will ultimately land the logged-out user at /wall because /urls redirects if the user isn't logged in
   res.redirect('/urls');
 });
 
 app.get('/register', (req, res) => {
+  if (isLoggedIn(req)) {
+    return res.redirect('/urls');
+  }
   const templateVars = {
     user: users[req.session.user_id]
   };
-  // console.log('individual user',templateVars.user)
   res.render('registration', templateVars)
 });
 
@@ -103,12 +94,10 @@ app.post('/register', (req, res) => {
   const retrievedUserID = getUserByEmail(req.body.email, users);
 
   if (!req.body.email || !req.body.password) {
-    res.redirect(400, '/register'); //do something more specific than this? Compass unclear
-    return;
+    return res.status(400).send('Email and password cannot be blank');
   }
   if (retrievedUserID) {
-    res.redirect(400, '/register');
-    return;
+    return res.status(400).send('An account with this email already exists');
   }
   const user_id = generateRandomString();
   users[user_id] = {};
@@ -116,11 +105,10 @@ app.post('/register', (req, res) => {
   users[user_id].email = req.body.email;
   users[user_id].password = bcrypt.hashSync(req.body.password, 10);
   users[user_id].password
-  // console.log('users object:', users);
   req.session.user_id = user_id;
 
   res.redirect('/urls');
-  // console.log('users object', users)
+
 
 });
 
@@ -132,7 +120,7 @@ app.get('/urls/new', (req, res) => {
   const templateVars = {
     user: users[req.session.user_id]
   }
-  // console.log(req);
+
   res.render('urls_new', templateVars);
 });
 
@@ -154,12 +142,10 @@ app.get('/urls', (req, res) => {
     user: users[req.session.user_id],
     urls: urlsForUser(req.session.user_id, urlDatabase)
   };
-  // console.log('templateVars.urls', templateVars.urls);
   res.render('urls_index', templateVars);
 })
 
 app.post('/urls', (req, res) => {
-  //is this really the right way to prevent people from getting where they shouldn't? I'm in post.
   if (!isLoggedIn(req)) {
     res.redirect('/login');
     return;
@@ -170,27 +156,32 @@ app.post('/urls', (req, res) => {
   urlDatabase[generatedShort] = {};
   urlDatabase[generatedShort].longURL = req.body.longURL;
   urlDatabase[generatedShort].user_id = req.session.user_id; //just session?
-  console.log('urlDatabase', urlDatabase);
   res.redirect(`/urls/${generatedShort}`);
 })
 
 app.get('/u/:shortURL', (req, res) => {
+  //if the shortURL doesn't exist in the database, redirect
+  if (!urlDatabase[req.params.shortURL]) {
+    return res.status(404).send('This tinyURL does not exist');
+  }
   const longURL = urlDatabase[req.params.shortURL].longURL;
   res.redirect(longURL);
 });
 
 
 app.get('/urls/:shortURL', (req, res) => {
-  console.log('');
-  console.log("getting '/urls/:shortURL'")
+  //If the tiny URL isn't in the database, send a message
+  if (!(Object.keys(urlDatabase).includes(req.params.shortURL))) {
+    res.status(404).send('Tiny url does not exist');
+  };
+
   if (!isLoggedIn(req)) {
-    res.redirect('/login');
+    res.redirect('/wall');
     return;
   }
 
-  //PROBLEM
   if (!urlIsOwnedByUser(req, urlDatabase)) {
-    res.redirect('/wall');
+    res.status(403).send('You do not have permission to view this page')
     return;
   }
 
@@ -205,42 +196,42 @@ app.get('/urls/:shortURL', (req, res) => {
 })
 
 app.post('/urls/:id', (req, res) => {
-  //PROBLEM something broken here, can edit but then it deletes (or hides?) them
-  const originalShort = req.params.id;
-  // console.log('req.params',req.params);
-
-  urlDatabase[originalShort] = req.body.newLongURL;
-  // console.log('new url from form',urlDatabase);
-  res.redirect('/urls/' + originalShort);
-});
-
-app.post('/urls/:shortURL/delete', (req, res) => {
-
-
-  if (!isLoggedIn(req)) {
-    res.redirect('/login');
+  if (!urlIsOwnedByUser(req, urlDatabase)) {
+    res.status(403).send('You do not have permission to view this page')
     return;
   }
 
-  //PROBLEM--blocking people when it shouldn't
-  // if (!urlIsOwnedByUser(req, urlDatabase)) {
-  //   res.redirect('/wall');
-  //   return;
-  // }
-
-  // console.log('urlDatabase before delete', urlDatabase)
-  const urlToDelete = req.params.shortURL;
-  delete urlDatabase[urlToDelete];
-  // console.log('urlDatabase after delete', urlDatabase)
+  const originalShort = req.params.id;
+  urlDatabase[originalShort] = {};
+  urlDatabase[originalShort].longURL = req.body.newLongURL;
+  urlDatabase[originalShort].user_id = req.session.user_id;
   res.redirect('/urls');
 });
 
+app.post('/urls/:shortURL/delete', (req, res) => {
+  if (!isLoggedIn(req)) {
+    res.redirect('/wall');
+    return;
+  }
+
+  if (!urlIsOwnedByUser(req, urlDatabase)) {
+    return res.status(403).send('You do not have permission to view this page');
+  }
+
+  console.log('urlDatabase before delete', urlDatabase)
+  const urlToDelete = req.params.shortURL;
+  delete urlDatabase[urlToDelete];
+  console.log('urlDatabase after delete', urlDatabase)
+  res.redirect('/urls');
+});
+
+//what was this about again?
 app.get('/urls.json', (req, res) => {
   res.json(urlDatabase);
 })
 
-app.get('/hello', (req, res) => {
-  res.send("<html><body>Hello <b>World</b></body></html>\n");
+app.get('*', (req, res) => {
+  res.send(404).send('Sorry, this page does not exist');
 });
 
 app.listen(PORT, () => {
